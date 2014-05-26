@@ -5,6 +5,8 @@
 
 extern void init_controller(int port);
 extern void stop_controller(int port);
+extern void start_logger();
+extern void stop_logger();
 
 static int port;
 
@@ -13,14 +15,17 @@ void sigint_handler(int signo)
   if (signo == SIGINT)
     printf("received SIGINT\n");
     stop_controller(port);
-
-    exit(0);
+    log ("stopping logger");
+    stop_logger();
+    _Exit(0);
 }
 
 int main(int argc, char *argv[])
 {
   int i;
   port = atoi(argv[1]);
+
+  start_logger();
 
   for (i = 2; i < argc; i++)
   {
@@ -41,25 +46,10 @@ int main(int argc, char *argv[])
     registerExternalService(argv[i], at_pos + 1);
   }
 
-
   if (signal(SIGINT, sigint_handler) == SIG_ERR)
-  printf("\ncan't catch SIGINT\n");
+    log("can't catch SIGINT");
 
   init_controller(port);
-
-  /*
-  Message m("hello", "", "world");
-
-  m.id = 10;
-  send(m);
-
-  Message m2 = recvReplyFor(m);
-  std::cout << "Got : " << m2.content << " " << std::endl;
-
-  Message m3 = recvReplyFor(m);
-  std::cout << "Got again : " << m3.content << " " << std::endl;
-
-  //std::this_thread::sleep_for (std::chrono::seconds(1)); */
 
   return 0;
 }

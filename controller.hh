@@ -9,7 +9,6 @@
 #include <condition_variable>
 #include <mutex>
 
-
 class Receiver {
 public:
     std::queue <std::unique_ptr<std::string> > q;
@@ -58,5 +57,6 @@ std::shared_ptr<Receiver> send_message(std::unique_ptr<Message> msg);
 void registerService(const std::string& name, std::function<void(std::unique_ptr<Message> )> handler);
 void registerExternalService(const std::string& name, char *where);
 
+void log(std::string&&);
 
 #endif
