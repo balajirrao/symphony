@@ -8,6 +8,8 @@
 extern void init_controller(int port);
 extern void stop_controller(int port);
 
+namespace logging = boost::log;
+
 static int port;
 
 void sigint_handler(int signo)
@@ -15,7 +17,8 @@ void sigint_handler(int signo)
   if (signo == SIGINT)
     BOOST_LOG_TRIVIAL(trace) << "received SIGINT. exiting";
     stop_controller(port);
-    _Exit(0);
+    exit(0);
+    //_Exit(0);
 }
 
 void sigpipe_handler (int s)
@@ -27,6 +30,11 @@ int main(int argc, char *argv[])
 {
   int i;
   port = atoi(argv[1]);
+
+ logging::core::get()->set_filter
+  (
+      logging::trivial::severity > logging::trivial::trace
+  );
 
   for (i = 2; i < argc; i++)
   {

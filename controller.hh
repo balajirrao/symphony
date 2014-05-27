@@ -9,7 +9,8 @@
 #include <condition_variable>
 #include <mutex>
 #include <boost/log/trivial.hpp>
-
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
 
 #define MSG_LEN_MAX 1024
 

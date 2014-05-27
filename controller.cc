@@ -23,17 +23,15 @@
 #include <dirent.h>
 #include <fstream>
 
-//#include <boost/exception/errinfo_errno.hpp>
-
 std::atomic<int> Message::curr_id(0);
 
 Message::~Message()
 {
-  if (reply_fd) {
+  if (reply_fd)
     close(reply_fd);
-  } else {
-        std::unique_lock<std::mutex> cvlck(rcvr->mtx);
 
+  if (rcvr && rcvr->is_local) {
+        std::unique_lock<std::mutex> cvlck(rcvr->mtx);
         BOOST_LOG_TRIVIAL (trace) << "closing receiver";
         rcvr->closed.store(true);
         rcvr->cv.notify_all();
@@ -104,7 +102,7 @@ void serviceOut(void)
     int ret;
     BOOST_LOG_TRIVIAL(trace) << "outq : waiting for message";
     out_cv.wait(lck, [](){return !out.empty();});
-    BOOST_LOG_TRIVIAL(trace) << "outq : waiting for message";
+    BOOST_LOG_TRIVIAL(trace) << "outq : message arrived";
 
     std::unique_ptr<Message> msg = std::move(out.front());
     out.pop();
@@ -121,6 +119,8 @@ void queueOut(std::unique_ptr<Message> msg)
   int ret;
 
    if (services.count (msg->service) == 0 ) {
+      msg->rcvr->is_local = false;
+
       if (remote_services.count (msg->service) == 0)
         throw std::runtime_error("outq : no such service");
 
@@ -135,13 +135,12 @@ void queueOut(std::unique_ptr<Message> msg)
         throw std::runtime_error("outq : could not connect to remote service");
 
       msg->rcvr->fd = sd;
-      msg->rcvr->is_local = false;
     } else {
-        msg->rcvr->is_local = true;
+      msg->rcvr->is_local = true;
 
-        BOOST_LOG_TRIVIAL(debug) << "outq : in-queueing message";
-        queueIn(std::move(msg));
-        return;
+      BOOST_LOG_TRIVIAL(debug) << "outq : in-queueing message";
+      queueIn(std::move(msg));
+      return;
     }
 
   std::unique_lock<std::mutex> lck (outMutex);
@@ -195,16 +194,7 @@ std::unique_ptr<std::string> Receiver::receive()
     int n;
 
     BOOST_LOG_TRIVIAL(trace) << "trying to receive remote message";
-
-    if (closed)
-      return nullptr;
-
-    try {
-      msg = read_len_prefixed_data(fd);
-    } catch (const char *err) {
-          close (fd);
-          BOOST_LOG_TRIVIAL(error) << err;      
-    }
+    msg = read_len_prefixed_data(fd);
 
     return std::move(msg);
   } else {
@@ -259,7 +249,7 @@ void Message::reply(const std::string &reply_content)
 
     /* TODO : Close if reply len is 0 ?*/
     snprintf(buf, 8, "%lu:", reply_content.length());
-    
+
     if (send(reply_fd, buf, strlen(buf), 0) < 0)
       throw std::runtime_error("reply : could not send length prefix");
 
@@ -339,7 +329,7 @@ void rpc_listener(int port)
        std::thread(fd_reader, c).detach();
        BOOST_LOG_TRIVIAL(trace) << "rpc listener : accepted connection";
      } else
-       BOOST_LOG_TRIVIAL(trace) << "rpc_listener : accept failed";
+       BOOST_LOG_TRIVIAL(error) << "rpc_listener : accept failed";
     }  
 }
 
@@ -375,7 +365,7 @@ void ipc_listener(const char *filename)
      std::thread(fd_reader, c).detach();
      BOOST_LOG_TRIVIAL(trace) << "rpc listener : accepted connection";
    } else
-     BOOST_LOG_TRIVIAL(trace) << "rpc_listener : accept failed";
+     BOOST_LOG_TRIVIAL(error) << "rpc_listener : accept failed";
   }
 }
 
