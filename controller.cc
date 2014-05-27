@@ -138,7 +138,7 @@ void queueOut(std::unique_ptr<Message> msg)
     } else {
       msg->rcvr->is_local = true;
 
-      BOOST_LOG_TRIVIAL(debug) << "outq : in-queueing message";
+      BOOST_LOG_TRIVIAL(trace) << "outq : in-queueing message";
       queueIn(std::move(msg));
       return;
     }
