@@ -134,9 +134,6 @@ void queueOut(std::unique_ptr<Message> msg)
 
 std::unique_ptr<std::string> Receiver::receive()
 {
-  if (closed)
-    return nullptr;
-
   if (fd) {
     char buf[256 + 1];
 
