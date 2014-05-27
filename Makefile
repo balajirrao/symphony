@@ -1,4 +1,4 @@
-CXX=g++ -std=c++11 -g
+CXX=g++ -std=c++11 -g -lpthread
 
 services = hello_service.so file_read_service.so str_search_service.so file_search_service.so
 
