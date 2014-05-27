@@ -51,6 +51,9 @@ int main(int argc, char *argv[])
   if (signal(SIGINT, sigint_handler) == SIG_ERR)
     log("can't catch SIGINT");
 
+  signal(SIGPIPE, SIG_IGN);
+
+
   init_controller(port);
 
   return 0;
