@@ -146,7 +146,7 @@ std::unique_ptr<std::string> Receiver::receive()
     }
 
   } else {
-    std::unique_lock<std::mutex> lck(q_mtx);
+    std::unique_lock<std::mutex> lck(mtx);
 
     cv.wait(lck, [&]() {return (!q.empty() || closed.load());});
 
@@ -182,7 +182,7 @@ std::shared_ptr<Receiver> send_message(std::unique_ptr<Message> msg)
 void Message::reply(const std::string &reply_content)
 {
   if (rcvr) {
-    std::unique_lock<std::mutex> lck(rcvr->q_mtx);
+    std::unique_lock<std::mutex> lck(rcvr->mtx);
 
     rcvr->q.push(std::unique_ptr<std::string>(new std::string(reply_content)));
     rcvr->cv.notify_all();   

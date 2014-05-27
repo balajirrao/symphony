@@ -12,7 +12,6 @@
 class Receiver {
 public:
     std::queue <std::unique_ptr<std::string> > q;
-    std::mutex q_mtx;
     std::condition_variable cv;
     std::mutex mtx;
   	std::atomic<bool> closed;
