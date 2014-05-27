@@ -8,7 +8,7 @@ libcontroller.so : controller.cc controller.hh logger.cc
 	$(CXX) controller.cc logger.cc --shared -fPIC -o libcontroller.so
 
 controller : libcontroller.so main.cc
-	$(CXX) main.cc libcontroller.so -o controller
+	$(CXX) main.cc libcontroller.so -o controller -ldl
 
 $(services) : %_service.so : libcontroller.so %_service.cc
 	$(CXX) $^ --shared -fPIC -o $@

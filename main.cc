@@ -2,6 +2,8 @@
 #include <dlfcn.h>
 #include <iostream>
 #include <unistd.h>
+#include <signal.h>
+#include <cstring>
 
 extern void init_controller(int port);
 extern void stop_controller(int port);
