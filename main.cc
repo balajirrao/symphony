@@ -7,27 +7,26 @@
 
 extern void init_controller(int port);
 extern void stop_controller(int port);
-extern void start_logger();
-extern void stop_logger();
 
 static int port;
 
 void sigint_handler(int signo)
 {
   if (signo == SIGINT)
-    printf("received SIGINT\n");
+    BOOST_LOG_TRIVIAL(trace) << "received SIGINT. exiting";
     stop_controller(port);
-    log ("stopping logger");
-    stop_logger();
     _Exit(0);
+}
+
+void sigpipe_handler (int s)
+{
+  BOOST_LOG_TRIVIAL(error) << "SIGPIPE";
 }
 
 int main(int argc, char *argv[])
 {
   int i;
   port = atoi(argv[1]);
-
-  start_logger();
 
   for (i = 2; i < argc; i++)
   {
@@ -49,9 +48,9 @@ int main(int argc, char *argv[])
   }
 
   if (signal(SIGINT, sigint_handler) == SIG_ERR)
-    log("can't catch SIGINT");
+    BOOST_LOG_TRIVIAL(error) << "can't catch SIGINT";
 
-  signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, sigpipe_handler);
 
 
   init_controller(port);

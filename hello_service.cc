@@ -5,7 +5,6 @@
 
 void hello_service(std::unique_ptr<Message> msg)
 {
-	std::cout << "hello sevice : got " << msg->content << std::endl;
 	msg->reply("Hello " + std::move(msg->content) + '\n');
 }
 

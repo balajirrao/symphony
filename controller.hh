@@ -8,6 +8,10 @@
 #include <queue>
 #include <condition_variable>
 #include <mutex>
+#include <boost/log/trivial.hpp>
+
+
+#define MSG_LEN_MAX 1024
 
 class Receiver {
 public:
@@ -16,10 +20,10 @@ public:
     std::mutex mtx;
   	std::atomic<bool> closed;
   	int msgid;
-
+    bool is_local;
     int fd;
 
-    Receiver() : fd(0) , closed(false) {}
+    Receiver() : fd(0) , closed(false), is_local(true) {}
 
     std::unique_ptr<std::string> receive();
     ~Receiver();
@@ -32,7 +36,6 @@ private:
 
 public:
   std::string service;
-  bool is_reply;
   int id;
   std::string content;
   int reply_fd;
@@ -40,7 +43,7 @@ public:
 
   Message(const std::string service, const std::string content) :
             service(service), content(content),
-            id(++curr_id), reply_fd(0), is_reply(false)
+            id(++curr_id), reply_fd(0)
   {}
 
   ~Message();
@@ -55,7 +58,5 @@ std::shared_ptr<Receiver> send_message(std::unique_ptr<Message> msg);
 
 void registerService(const std::string& name, std::function<void(std::unique_ptr<Message> )> handler);
 void registerExternalService(const std::string& name, char *where);
-
-void log(std::string&&);
 
 #endif
