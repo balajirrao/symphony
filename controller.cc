@@ -289,6 +289,7 @@ void ipc_listener(const char *filename)
   log ("start ipc listener");
   sockfd = socket(PF_UNIX, SOCK_STREAM, 0);
   memset(&adr_srvr,0,sizeof adr_srvr);  
+  adr_srvr.sun_family = AF_UNIX;
   strncpy(adr_srvr.sun_path, filename, sizeof(adr_srvr.sun_path) - 1);
 
   if (bind(sockfd, (struct sockaddr *)&adr_srvr, sizeof(adr_srvr)) < 0) {
