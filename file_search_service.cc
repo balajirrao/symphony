@@ -19,14 +19,14 @@ void service(std::unique_ptr<Message> msg)
 		std::unique_ptr<Message> msrch (new Message("str.search", (std::string(1, c) + ":") + *std::move(strfile)));
 		auto rcvrsrch = send_message(std::move(msrch));
 
-		std::cout << "file.search : Going to receive" << std::endl;
+		log( "file.search : Going to receive");
 		std::unique_ptr<std::string> strsrch;
 
 		while ((strsrch = rcvrsrch->receive()) != nullptr) {
-			std::cout << "fie seatch result : " << *strsrch << std::endl;
+			log("fie seatch result : " + *strsrch);
 			msg->reply(*strsrch);	
 		}
-		std::cout << "file.search : done receive" << std::endl;
+		log("file.search : done receive");
 
 	}
 
