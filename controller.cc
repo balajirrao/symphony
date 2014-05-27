@@ -32,8 +32,8 @@ Message::~Message()
   if (reply_fd) {
     close(reply_fd);
   } else {
-        rcvr->closed.store(true);
         std::unique_lock<std::mutex> cvlck(rcvr->mtx);
+        rcvr->closed.store(true);
         rcvr->cv.notify_all();
   }
 }
@@ -52,7 +52,8 @@ static std::unordered_map <std::string, std::pair<struct sockaddr *, socklen_t>>
 
 void call_handler(std::unique_ptr<Message> m)
 {
-  services[m->service](std::move(m));
+  auto service = services[m->service];
+  service(std::move(m));
 }
 
 void serviceIn(void)
@@ -109,7 +110,7 @@ void queueOut(std::unique_ptr<Message> msg)
       if (remote_services.count (msg->service) == 0) 
         log("queueOut : no such external service " + msg->service);
       else {
-        int len = (remote_services[msg->service].second == PF_INET)
+        int len = (remote_services[msg->service].second == AF_INET)
                     ? sizeof (struct sockaddr_in) : sizeof (struct sockaddr_un);
 
         int sd = socket(remote_services[msg->service].second, SOCK_STREAM, 0);
@@ -240,7 +241,7 @@ void rpc_listener(int port)
   socklen_t len_inet;
   int c;
 
-  sockfd = socket(PF_INET, SOCK_STREAM, 0);
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd == -1) {
     log ("rpc_listener : " + std::string(strerror(errno)));
     return;
@@ -284,7 +285,7 @@ void ipc_listener(const char *filename)
   int c;
 
   log ("start ipc listener");
-  sockfd = socket(PF_UNIX, SOCK_STREAM, 0);
+  sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
   memset(&adr_srvr,0,sizeof adr_srvr);  
   adr_srvr.sun_family = AF_UNIX;
   strncpy(adr_srvr.sun_path, filename, sizeof(adr_srvr.sun_path) - 1);
@@ -333,7 +334,7 @@ void registerExternalService(const std::string& name, char *where)
     strncpy(a->sun_path, where, sizeof (a->sun_path));
 
     addr = (struct sockaddr *) a;
-    pf = PF_UNIX;
+    pf = AF_UNIX;
 
   } else {
     char *colon_pos;
@@ -358,7 +359,7 @@ void registerExternalService(const std::string& name, char *where)
     inaddr->sin_family = AF_INET;
 
     addr = (struct sockaddr *) inaddr;
-    pf = PF_INET;
+    pf = AF_INET;
   }
 
   log ("registered external service " + name + " at " + where);
