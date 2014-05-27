@@ -136,6 +136,9 @@ void queueOut(std::unique_ptr<Message> msg)
 std::unique_ptr<std::string> Receiver::receive()
 {
   if (fd) {
+    if (closed)
+      return nullptr;
+
     char buf[256 + 1];
 
     int n = read(fd, buf, 256);
@@ -273,7 +276,6 @@ void rpc_listener(int port)
        log ("rpc_listener : accepted");
      } else
        log ("rpc_listener : accept failed " + std::string(strerror(errno)));
-       std::thread(fd_reader, c).detach();
     }  
 }
 
